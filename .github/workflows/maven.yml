@@ -27,4 +27,4 @@ jobs:
       uses: actions/upload-artifact@v2.2.2
       with:
        name: jar artifact
-       path: /home/runner/work/SpigotProxy/SpigotProxy/target/*.jar
+       path: target/*.jar
