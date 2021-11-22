@@ -17,11 +17,12 @@ public class SpigotProxy extends JavaPlugin {
 
     private String channelFieldName;
 
-    public void onLoad() {
+    public void onEnable() {
         String version = super.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3];
         channelFieldName = getChannelFieldName(version);
         if (channelFieldName == null) {
             getLogger().log(Level.SEVERE, "Unknown server version " + version + ", please see if there are any updates avaible");
+            Bukkit.getPluginManager().disablePlugin(this);
             return;
         } else {
             getLogger().info("Detected server version " + version);
@@ -55,7 +56,7 @@ public class SpigotProxy extends JavaPlugin {
         for (ChannelFuture channelFuture : channelFutureList) {
             ChannelPipeline channelPipeline = channelFuture.channel().pipeline();
             ChannelHandler serverBootstrapAcceptor = channelPipeline.first();
-            System.out.println(serverBootstrapAcceptor.getClass().getName());
+            getLogger().info(serverBootstrapAcceptor.getClass().getName());
             ChannelInitializer<SocketChannel> oldChildHandler = ReflectionUtils.getPrivateField(serverBootstrapAcceptor.getClass(), serverBootstrapAcceptor, ChannelInitializer.class, "childHandler");
             ReflectionUtils.setPrivateField(serverBootstrapAcceptor.getClass(), serverBootstrapAcceptor, "childHandler", new NettyChannelInitializer(oldChildHandler, minecraftServer.getClass().getPackage().getName()));
         }
