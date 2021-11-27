@@ -56,8 +56,8 @@ public class NettyChannelInitializer extends ChannelInitializer<SocketChannel> {
                     // Or use channel address for HAProxy LOCAL header
                     // See: https://www.haproxy.org/download/2.4/doc/proxy-protocol.txt
                     SocketAddress socketaddr = (realaddress != null)
-                        ? new InetSocketAddress(realaddress, realport)
-                        : channel.remoteAddress();
+                            ? new InetSocketAddress(realaddress, realport)
+                            : channel.remoteAddress();
 
                     ChannelHandler handler = channel.pipeline().get("packet_handler");
                     addr.set(handler, socketaddr);

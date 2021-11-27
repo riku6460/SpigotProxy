@@ -14,12 +14,9 @@ import java.util.List;
 import java.util.logging.Level;
 
 public class SpigotProxy extends JavaPlugin {
-
-    private String channelFieldName;
-
     public void onEnable() {
-        String version = super.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3];
-        channelFieldName = getChannelFieldName(version);
+        String version = getServer().getClass().getPackage().getName().split("\\.")[3];
+        final String channelFieldName = getChannelFieldName(version);
         if (channelFieldName == null) {
             getLogger().log(Level.SEVERE, "Unknown server version " + version + ", please see if there are any updates avaible");
             Bukkit.getPluginManager().disablePlugin(this);
@@ -27,20 +24,20 @@ public class SpigotProxy extends JavaPlugin {
         } else {
             getLogger().info("Detected server version " + version);
         }
+
         try {
             getLogger().info("Injecting NettyHandler...");
-            inject();
+            inject(channelFieldName);
             getLogger().info("Injection successful!");
         } catch (Exception e) {
-            getLogger().info("Injection netty handler failed!");
-            e.printStackTrace();
+            getLogger().log(Level.SEVERE, "Injection netty handler failed!", e);
+            Bukkit.getPluginManager().disablePlugin(this);
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private void inject() throws Exception {
-        Method serverGetHandle = Bukkit.getServer().getClass().getDeclaredMethod("getServer");
-        Object minecraftServer = serverGetHandle.invoke(Bukkit.getServer());
+    private void inject(final String channelFieldName) throws Exception {
+        Method serverGetHandle = getServer().getClass().getDeclaredMethod("getServer");
+        Object minecraftServer = serverGetHandle.invoke(getServer());
 
         Method serverConnectionMethod = null;
         for (Method method : minecraftServer.getClass().getSuperclass().getDeclaredMethods()) {
@@ -50,19 +47,20 @@ public class SpigotProxy extends JavaPlugin {
             serverConnectionMethod = method;
             break;
         }
+
         Object serverConnection = serverConnectionMethod.invoke(minecraftServer);
-        List<ChannelFuture> channelFutureList = ReflectionUtils.getPrivateField(serverConnection.getClass(), serverConnection, List.class, channelFieldName);
+        List<ChannelFuture> channelFutureList = ReflectionUtils.getPrivateField(serverConnection.getClass(), serverConnection, channelFieldName);
 
         for (ChannelFuture channelFuture : channelFutureList) {
             ChannelPipeline channelPipeline = channelFuture.channel().pipeline();
             ChannelHandler serverBootstrapAcceptor = channelPipeline.first();
             getLogger().info(serverBootstrapAcceptor.getClass().getName());
-            ChannelInitializer<SocketChannel> oldChildHandler = ReflectionUtils.getPrivateField(serverBootstrapAcceptor.getClass(), serverBootstrapAcceptor, ChannelInitializer.class, "childHandler");
+            ChannelInitializer<SocketChannel> oldChildHandler = ReflectionUtils.getPrivateField(serverBootstrapAcceptor.getClass(), serverBootstrapAcceptor, "childHandler");
             ReflectionUtils.setPrivateField(serverBootstrapAcceptor.getClass(), serverBootstrapAcceptor, "childHandler", new NettyChannelInitializer(oldChildHandler, minecraftServer.getClass().getPackage().getName()));
         }
     }
 
-    public String getChannelFieldName(String version) {
+    private String getChannelFieldName(final String version) {
         switch (version) {
             case "v1_16_R3":
             case "v1_16_R2":
