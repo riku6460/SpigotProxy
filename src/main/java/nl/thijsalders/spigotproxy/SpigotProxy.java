@@ -75,6 +75,7 @@ public class SpigotProxy extends JavaPlugin {
             case "v1_8_R2":
             case "v1_8_R3":
                 return "g";
+            case "v1_18_R1":
             case "v1_17_R1":
             case "v1_14_R1":
             case "v1_13_R1":
