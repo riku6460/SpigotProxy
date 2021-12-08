@@ -21,6 +21,10 @@
             <id>spigot-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
+        <repository>
+            <id>fabric-repo</id>
+            <url>https://maven.fabricmc.net/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -36,11 +40,46 @@
             <version>4.1.70.Final</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>net.fabricmc</groupId>
+            <artifactId>mapping-io</artifactId>
+            <version>0.3.0</version>
+            <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.ow2.asm</groupId>
+                    <artifactId>asm</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
     </dependencies>
 
     <build>
-        <finalName>${project.name}</finalName>
         <defaultGoal>clean package</defaultGoal>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.4</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <finalName>${project.name}</finalName>
+                            <relocations>
+                                <relocation>
+                                    <pattern>net.fabricmc.mappingio</pattern>
+                                    <shadedPattern>nl.thijsalders.spigotproxy.libs.net.fabricmc.mappingio</shadedPattern>
+                                </relocation>
+                            </relocations>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>

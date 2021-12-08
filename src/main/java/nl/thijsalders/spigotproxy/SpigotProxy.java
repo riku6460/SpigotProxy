@@ -9,14 +9,24 @@ import nl.thijsalders.spigotproxy.netty.NettyChannelInitializer;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.logging.Level;
 
 public class SpigotProxy extends JavaPlugin {
     public void onEnable() {
+        Mapping mapping = null;
+        try {
+            mapping = new Mapping();
+        } catch (FileNotFoundException ignored) {
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         String version = getServer().getClass().getPackage().getName().split("\\.")[3];
-        final String channelFieldName = getChannelFieldName(version);
+        final String channelFieldName = getChannelFieldName(version, mapping);
         if (channelFieldName == null) {
             getLogger().log(Level.SEVERE, "Unknown server version " + version + ", please see if there are any updates avaible");
             Bukkit.getPluginManager().disablePlugin(this);
@@ -27,7 +37,7 @@ public class SpigotProxy extends JavaPlugin {
 
         try {
             getLogger().info("Injecting NettyHandler...");
-            inject(channelFieldName);
+            inject(channelFieldName, mapping);
             getLogger().info("Injection successful!");
         } catch (Exception e) {
             getLogger().log(Level.SEVERE, "Injection netty handler failed!", e);
@@ -35,7 +45,7 @@ public class SpigotProxy extends JavaPlugin {
         }
     }
 
-    private void inject(final String channelFieldName) throws Exception {
+    private void inject(final String channelFieldName, final Mapping mapping) throws Exception {
         Method serverGetHandle = getServer().getClass().getDeclaredMethod("getServer");
         Object minecraftServer = serverGetHandle.invoke(getServer());
 
@@ -56,11 +66,18 @@ public class SpigotProxy extends JavaPlugin {
             ChannelHandler serverBootstrapAcceptor = channelPipeline.first();
             getLogger().info(serverBootstrapAcceptor.getClass().getName());
             ChannelInitializer<SocketChannel> oldChildHandler = ReflectionUtils.getPrivateField(serverBootstrapAcceptor.getClass(), serverBootstrapAcceptor, "childHandler");
-            ReflectionUtils.setPrivateField(serverBootstrapAcceptor.getClass(), serverBootstrapAcceptor, "childHandler", new NettyChannelInitializer(oldChildHandler, minecraftServer.getClass().getPackage().getName()));
+            ReflectionUtils.setPrivateField(serverBootstrapAcceptor.getClass(), serverBootstrapAcceptor, "childHandler", new NettyChannelInitializer(oldChildHandler, minecraftServer.getClass().getPackage().getName(), mapping));
         }
     }
 
-    private String getChannelFieldName(final String version) {
+    private String getChannelFieldName(final String version, final Mapping mapping) {
+        if (mapping != null) {
+            return mapping.mapFieldName(
+                    "net/minecraft/server/network/ServerConnectionListener",
+                    "channels",
+                    "Ljava/util/List;");
+        }
+
         switch (version) {
             case "v1_16_R3":
             case "v1_16_R2":

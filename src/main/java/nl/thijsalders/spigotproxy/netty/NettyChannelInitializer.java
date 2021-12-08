@@ -8,6 +8,7 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.haproxy.HAProxyMessage;
 import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
+import nl.thijsalders.spigotproxy.Mapping;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -21,21 +22,30 @@ public class NettyChannelInitializer extends ChannelInitializer<SocketChannel> {
     private final Method oldChildHandlerMethod;
     private Field addr;
 
-    public NettyChannelInitializer(ChannelInitializer<SocketChannel> oldChildHandler, String minecraftPackage) throws Exception {
+    public NettyChannelInitializer(ChannelInitializer<SocketChannel> oldChildHandler, String minecraftPackage, Mapping mapping) throws Exception {
         this.oldChildHandler = oldChildHandler;
         this.oldChildHandlerMethod = this.oldChildHandler.getClass().getDeclaredMethod("initChannel", Channel.class);
         this.oldChildHandlerMethod.setAccessible(true);
 
         Class<?> networkManager;
-        try {
-            networkManager = Class.forName("net.minecraft.network.NetworkManager");
-        } catch (ClassNotFoundException e) {
-            networkManager = Class.forName(minecraftPackage + ".NetworkManager");
-        }
-        try {
-            this.addr = networkManager.getField("socketAddress");
-        } catch (NoSuchFieldException e) {
-            this.addr = networkManager.getField("l");
+        if (mapping != null) {
+            networkManager = Class.forName(mapping.mapClassName("net/minecraft/network/Connection").replace('/', '.'));
+            this.addr = networkManager.getField(mapping.mapFieldName(
+                    "net/minecraft/network/Connection",
+                    "address",
+                    "Ljava/net/SocketAddress;"));
+        } else {
+            try {
+                networkManager = Class.forName("net.minecraft.network.NetworkManager");
+            } catch (ClassNotFoundException e) {
+                networkManager = Class.forName(minecraftPackage + ".NetworkManager");
+            }
+
+            try {
+                this.addr = networkManager.getField("socketAddress");
+            } catch (NoSuchFieldException e) {
+                this.addr = networkManager.getField("l");
+            }
         }
     }
 
