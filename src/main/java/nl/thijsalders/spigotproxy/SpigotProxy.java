@@ -28,7 +28,7 @@ public class SpigotProxy extends JavaPlugin {
         String version = getServer().getClass().getPackage().getName().split("\\.")[3];
         final String channelFieldName = getChannelFieldName(version, mapping);
         if (channelFieldName == null) {
-            getLogger().log(Level.SEVERE, "Unknown server version " + version + ", please see if there are any updates avaible");
+            getLogger().log(Level.SEVERE, "Unknown server version " + version + ", please see if there are any updates available");
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         } else {
