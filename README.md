@@ -45,6 +45,7 @@ In the Spigot server (with late-bind on false), you should see the actual IP of 
 ## Other uses:
 - With the [nginx stream module](https://docs.nginx.com/nginx/admin-guide/load-balancer/tcp-udp-load-balancer/) with `proxy_protocol on`.
 - With [infrared](https://github.com/haveachin/infrared), a minecraft focused lightweight reverse proxy written in Go.
+- With [lazymc](https://github.com/timvisee/lazymc), a reverse proxy to put your Minecraft server to rest when idle.
 
 ## Note
 
