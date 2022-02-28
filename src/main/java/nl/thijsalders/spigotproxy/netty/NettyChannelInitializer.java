@@ -22,19 +22,19 @@ public class NettyChannelInitializer extends ChannelInitializer<SocketChannel> {
     private final Method oldChildHandlerMethod;
     private Field addr;
 
-    public NettyChannelInitializer(ChannelInitializer<SocketChannel> oldChildHandler, String minecraftPackage, Mapping mapping) throws Exception {
+    public NettyChannelInitializer(ChannelInitializer<SocketChannel> oldChildHandler, String minecraftPackage, String version, Mapping mapping) throws Exception {
         this.oldChildHandler = oldChildHandler;
         this.oldChildHandlerMethod = this.oldChildHandler.getClass().getDeclaredMethod("initChannel", Channel.class);
         this.oldChildHandlerMethod.setAccessible(true);
 
-        Class<?> networkManager;
         if (mapping != null) {
-            networkManager = Class.forName(mapping.mapClassName("net/minecraft/network/Connection").replace('/', '.'));
+            Class<?> networkManager = Class.forName(mapping.mapClassName("net/minecraft/network/Connection").replace('/', '.'));
             this.addr = networkManager.getField(mapping.mapFieldName(
                     "net/minecraft/network/Connection",
                     "address",
                     "Ljava/net/SocketAddress;"));
         } else {
+            Class<?> networkManager;
             try {
                 networkManager = Class.forName("net.minecraft.network.NetworkManager");
             } catch (ClassNotFoundException e) {
@@ -44,7 +44,7 @@ public class NettyChannelInitializer extends ChannelInitializer<SocketChannel> {
             try {
                 this.addr = networkManager.getField("socketAddress");
             } catch (NoSuchFieldException e) {
-                this.addr = networkManager.getField("l");
+                this.addr = networkManager.getField(getSocketAddressFieldName(version));
             }
         }
     }
@@ -78,4 +78,12 @@ public class NettyChannelInitializer extends ChannelInitializer<SocketChannel> {
         });
     }
 
+    private String getSocketAddressFieldName(String version) {
+        switch (version) {
+            case "v1_18_R2":
+                return "n";
+            default:
+                return "l";
+        }
+    }
 }

@@ -37,7 +37,7 @@ public class SpigotProxy extends JavaPlugin {
 
         try {
             getLogger().info("Injecting NettyHandler...");
-            inject(channelFieldName, mapping);
+            inject(channelFieldName, version, mapping);
             getLogger().info("Injection successful!");
         } catch (Exception e) {
             getLogger().log(Level.SEVERE, "Injection netty handler failed!", e);
@@ -45,7 +45,7 @@ public class SpigotProxy extends JavaPlugin {
         }
     }
 
-    private void inject(final String channelFieldName, final Mapping mapping) throws Exception {
+    private void inject(final String channelFieldName, final String version, final Mapping mapping) throws Exception {
         Method serverGetHandle = getServer().getClass().getDeclaredMethod("getServer");
         Object minecraftServer = serverGetHandle.invoke(getServer());
 
@@ -66,7 +66,7 @@ public class SpigotProxy extends JavaPlugin {
             ChannelHandler serverBootstrapAcceptor = channelPipeline.first();
             getLogger().info(serverBootstrapAcceptor.getClass().getName());
             ChannelInitializer<SocketChannel> oldChildHandler = ReflectionUtils.getPrivateField(serverBootstrapAcceptor.getClass(), serverBootstrapAcceptor, "childHandler");
-            ReflectionUtils.setPrivateField(serverBootstrapAcceptor.getClass(), serverBootstrapAcceptor, "childHandler", new NettyChannelInitializer(oldChildHandler, minecraftServer.getClass().getPackage().getName(), mapping));
+            ReflectionUtils.setPrivateField(serverBootstrapAcceptor.getClass(), serverBootstrapAcceptor, "childHandler", new NettyChannelInitializer(oldChildHandler, minecraftServer.getClass().getPackage().getName(), version, mapping));
         }
     }
 
@@ -92,6 +92,7 @@ public class SpigotProxy extends JavaPlugin {
             case "v1_8_R2":
             case "v1_8_R3":
                 return "g";
+            case "v1_18_R2":
             case "v1_18_R1":
             case "v1_17_R1":
             case "v1_14_R1":
