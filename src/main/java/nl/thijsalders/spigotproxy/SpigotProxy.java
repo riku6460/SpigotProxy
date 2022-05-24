@@ -17,6 +17,15 @@ import java.util.logging.Level;
 
 public class SpigotProxy extends JavaPlugin {
     public void onEnable() {
+        try {
+            Class<?> paperConfigClass = Class.forName("com.destroystokyo.paper.PaperConfig");
+            paperConfigClass.getField("useProxyProtocol").set(null, Boolean.TRUE);
+            getLogger().warning("In Paper 1.18.2 344+, this plugin is no longer required.");
+            getLogger().warning("Set settings.proxy-protocol to true in paper.yml and remove this plugin.");
+            Bukkit.getPluginManager().disablePlugin(this);
+            return;
+        } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException ignored) {}
+
         Mapping mapping = null;
         try {
             mapping = new Mapping();
