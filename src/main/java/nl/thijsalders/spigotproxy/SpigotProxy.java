@@ -31,7 +31,7 @@ public class SpigotProxy extends JavaPlugin {
             mapping = new Mapping();
         } catch (FileNotFoundException ignored) {
         } catch (IOException e) {
-            e.printStackTrace();
+            getLogger().log(Level.SEVERE, "Failed to load mappings", e);
         }
 
         String version = getServer().getClass().getPackage().getName().split("\\.")[3];
