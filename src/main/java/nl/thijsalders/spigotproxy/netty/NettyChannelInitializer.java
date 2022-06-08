@@ -80,6 +80,7 @@ public class NettyChannelInitializer extends ChannelInitializer<SocketChannel> {
 
     private String getSocketAddressFieldName(String version) {
         switch (version) {
+            case "v1_19_R1":
             case "v1_18_R2":
                 return "n";
             default:
