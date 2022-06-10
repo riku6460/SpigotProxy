@@ -8,45 +8,45 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.haproxy.HAProxyMessage;
 import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
-import nl.thijsalders.spigotproxy.Mapping;
+import nl.thijsalders.spigotproxy.UnknownVersionException;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.logging.Logger;
 
 public class NettyChannelInitializer extends ChannelInitializer<SocketChannel> {
-
-
     private final ChannelInitializer<SocketChannel> oldChildHandler;
     private final Method oldChildHandlerMethod;
-    private Field addr;
+    private final Field addr;
 
-    public NettyChannelInitializer(ChannelInitializer<SocketChannel> oldChildHandler, String minecraftPackage, String version, Mapping mapping) throws Exception {
+    public NettyChannelInitializer(ChannelInitializer<SocketChannel> oldChildHandler, String minecraftPackage, Logger logger) throws Exception {
         this.oldChildHandler = oldChildHandler;
         this.oldChildHandlerMethod = this.oldChildHandler.getClass().getDeclaredMethod("initChannel", Channel.class);
         this.oldChildHandlerMethod.setAccessible(true);
 
-        if (mapping != null) {
-            Class<?> networkManager = Class.forName(mapping.mapClassName("net/minecraft/network/Connection").replace('/', '.'));
-            this.addr = networkManager.getField(mapping.mapFieldName(
-                    "net/minecraft/network/Connection",
-                    "address",
-                    "Ljava/net/SocketAddress;"));
-        } else {
-            Class<?> networkManager;
-            try {
-                networkManager = Class.forName("net.minecraft.network.NetworkManager");
-            } catch (ClassNotFoundException e) {
-                networkManager = Class.forName(minecraftPackage + ".NetworkManager");
-            }
+        Class<?> networkManager;
+        try {
+            networkManager = Class.forName("net.minecraft.network.NetworkManager");
+        } catch (ClassNotFoundException e) {
+            networkManager = Class.forName(minecraftPackage + ".NetworkManager");
+        }
 
-            try {
-                this.addr = networkManager.getField("socketAddress");
-            } catch (NoSuchFieldException e) {
-                this.addr = networkManager.getField(getSocketAddressFieldName(version));
+        Field addr = null;
+        for (Field field : networkManager.getFields()) {
+            if (field.getType() == SocketAddress.class) {
+                logger.fine("socketAddress: " + field);
+                addr = field;
+                break;
             }
         }
+
+        if (addr == null) {
+            throw new UnknownVersionException();
+        }
+
+        this.addr = addr;
     }
 
     @Override
@@ -76,15 +76,5 @@ public class NettyChannelInitializer extends ChannelInitializer<SocketChannel> {
                 }
             }
         });
-    }
-
-    private String getSocketAddressFieldName(String version) {
-        switch (version) {
-            case "v1_19_R1":
-            case "v1_18_R2":
-                return "n";
-            default:
-                return "l";
-        }
     }
 }

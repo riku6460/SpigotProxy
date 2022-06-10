@@ -21,10 +21,6 @@
             <id>spigot-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
-        <repository>
-            <id>fabric-repo</id>
-            <url>https://maven.fabricmc.net/</url>
-        </repository>
     </repositories>
 
     <dependencies>
@@ -39,18 +35,6 @@
             <artifactId>netty-codec-haproxy</artifactId>
             <version>4.1.77.Final</version>
             <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>net.fabricmc</groupId>
-            <artifactId>mapping-io</artifactId>
-            <version>0.3.0</version>
-            <scope>compile</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.ow2.asm</groupId>
-                    <artifactId>asm</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
     </dependencies>
 
@@ -73,10 +57,6 @@
                                 <relocation>
                                     <pattern>io.netty.handler.codec.haproxy</pattern>
                                     <shadedPattern>nl.thijsalders.spigotproxy.libs.io.netty.handler.codec.haproxy</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>net.fabricmc.mappingio</pattern>
-                                    <shadedPattern>nl.thijsalders.spigotproxy.libs.net.fabricmc.mappingio</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>
