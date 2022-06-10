@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.logging.Level;
 
 public class SpigotProxy extends JavaPlugin {
+    private List<ChannelFuture> channelFutureList;
+
     public void onEnable() {
         try {
             Class<?> paperConfigClass = Class.forName("com.destroystokyo.paper.PaperConfig");
@@ -43,6 +45,15 @@ public class SpigotProxy extends JavaPlugin {
         }
     }
 
+    @Override
+    public void onDisable() {
+        try {
+            uninject();
+        } catch (Exception e) {
+            getLogger().log(Level.SEVERE, "Uninjection netty handler failed!", e);
+        }
+    }
+
     @SuppressWarnings("unchecked")
     private void inject() throws Exception {
         Object minecraftServer = getServer().getClass().getMethod("getServer").invoke(getServer());
@@ -60,28 +71,43 @@ public class SpigotProxy extends JavaPlugin {
             throw new UnknownVersionException();
         }
 
-        List<ChannelFuture> channelFutureList = null;
         for (Field field : serverConnection.getClass().getDeclaredFields()) {
             if (field.getType() == List.class && field.getGenericType() instanceof ParameterizedType) {
                 Type[] types = ((ParameterizedType) field.getGenericType()).getActualTypeArguments();
                 if (types.length == 1 && types[0] == ChannelFuture.class) {
                     field.setAccessible(true);
                     getLogger().fine("channels: " + field);
-                    channelFutureList = (List<ChannelFuture>) field.get(serverConnection);
+                    this.channelFutureList = (List<ChannelFuture>) field.get(serverConnection);
                     break;
                 }
             }
         }
 
-        if (channelFutureList == null) {
+        if (this.channelFutureList == null) {
             throw new UnknownVersionException();
         }
 
-        for (ChannelFuture channelFuture : channelFutureList) {
+        for (ChannelFuture channelFuture : this.channelFutureList) {
             ChannelPipeline channelPipeline = channelFuture.channel().pipeline();
             ChannelHandler serverBootstrapAcceptor = channelPipeline.first();
             ChannelInitializer<SocketChannel> oldChildHandler = ReflectionUtils.getPrivateField(serverBootstrapAcceptor.getClass(), serverBootstrapAcceptor, "childHandler");
             ReflectionUtils.setPrivateField(serverBootstrapAcceptor.getClass(), serverBootstrapAcceptor, "childHandler", new NettyChannelInitializer(oldChildHandler, minecraftServer.getClass().getPackage().getName(), getLogger()));
+        }
+    }
+
+    private void uninject() throws Exception {
+        if (this.channelFutureList == null) {
+            return;
+        }
+
+        for (ChannelFuture channelFuture : this.channelFutureList) {
+            ChannelPipeline channelPipeline = channelFuture.channel().pipeline();
+            ChannelHandler serverBootstrapAcceptor = channelPipeline.first();
+            ChannelInitializer<SocketChannel> childHandler = ReflectionUtils.getPrivateField(serverBootstrapAcceptor.getClass(), serverBootstrapAcceptor, "childHandler");
+            if (childHandler instanceof NettyChannelInitializer) {
+                ChannelInitializer<SocketChannel> oldChildHandler = ((NettyChannelInitializer) childHandler).getOldChildHandler();
+                ReflectionUtils.setPrivateField(serverBootstrapAcceptor.getClass(), serverBootstrapAcceptor, "childHandler", oldChildHandler);
+            }
         }
     }
 }

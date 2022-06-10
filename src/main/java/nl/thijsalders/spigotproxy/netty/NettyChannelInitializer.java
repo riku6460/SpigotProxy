@@ -49,6 +49,10 @@ public class NettyChannelInitializer extends ChannelInitializer<SocketChannel> {
         this.addr = addr;
     }
 
+    public ChannelInitializer<SocketChannel> getOldChildHandler() {
+        return this.oldChildHandler;
+    }
+
     @Override
     protected void initChannel(SocketChannel channel) throws Exception {
         this.oldChildHandlerMethod.invoke(this.oldChildHandler, channel);
