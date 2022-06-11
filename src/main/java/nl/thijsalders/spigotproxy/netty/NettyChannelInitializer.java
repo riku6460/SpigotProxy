@@ -21,7 +21,7 @@ public class NettyChannelInitializer extends ChannelInitializer<SocketChannel> {
     private final Method oldChildHandlerMethod;
     private final Field addr;
 
-    public NettyChannelInitializer(ChannelInitializer<SocketChannel> oldChildHandler, String minecraftPackage, Logger logger) throws Exception {
+    public NettyChannelInitializer(ChannelInitializer<SocketChannel> oldChildHandler, Package minecraftPackage, Logger logger) throws Exception {
         this.oldChildHandler = oldChildHandler;
         this.oldChildHandlerMethod = this.oldChildHandler.getClass().getDeclaredMethod("initChannel", Channel.class);
         this.oldChildHandlerMethod.setAccessible(true);
@@ -30,7 +30,7 @@ public class NettyChannelInitializer extends ChannelInitializer<SocketChannel> {
         try {
             networkManager = Class.forName("net.minecraft.network.NetworkManager");
         } catch (ClassNotFoundException e) {
-            networkManager = Class.forName(minecraftPackage + ".NetworkManager");
+            networkManager = Class.forName(minecraftPackage.getName() + ".NetworkManager");
         }
 
         Field addr = null;
