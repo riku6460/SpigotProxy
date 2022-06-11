@@ -53,6 +53,16 @@
                         </goals>
                         <configuration>
                             <finalName>${project.name}</finalName>
+                            <filters>
+                                <filter>
+                                    <artifact>io.netty:*</artifact>
+                                    <excludeDefaults>true</excludeDefaults>
+                                    <includes>
+                                        <include>io/netty/handler/codec/haproxy/**</include>
+                                        <include>META-INF/maven/io.netty/netty-codec-haproxy/**</include>
+                                    </includes>
+                                </filter>
+                            </filters>
                             <relocations>
                                 <relocation>
                                     <pattern>io.netty.handler.codec.haproxy</pattern>
