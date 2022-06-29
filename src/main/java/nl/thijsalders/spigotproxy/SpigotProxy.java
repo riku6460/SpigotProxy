@@ -19,15 +19,34 @@ import java.util.logging.Level;
 public class SpigotProxy extends JavaPlugin {
     private List<ChannelFuture> channelFutureList;
 
+    @Override
     public void onEnable() {
+        boolean isBuiltin = false;
+        String configFile = null;
+        String configKey = null;
+        try {
+            Class<?> globalConfigurationClass = Class.forName("io.papermc.paper.configuration.GlobalConfiguration");
+            Object proxies = globalConfigurationClass.getField("proxies").get(globalConfigurationClass.getMethod("get").invoke(null));
+            proxies.getClass().getField("proxyProtocol").setBoolean(proxies, true);
+            isBuiltin = true;
+            configFile = "config/paper-global.yml";
+            configKey = "proxies.proxy-protocol";
+        } catch (ReflectiveOperationException ignored) {}
+
         try {
             Class<?> paperConfigClass = Class.forName("com.destroystokyo.paper.PaperConfig");
-            paperConfigClass.getField("useProxyProtocol").set(null, Boolean.TRUE);
+            paperConfigClass.getField("useProxyProtocol").setBoolean(null, true);
+            isBuiltin = true;
+            configFile = "paper.yml";
+            configKey = "settings.proxy-protocol";
+        } catch (ReflectiveOperationException ignored) {}
+
+        if (isBuiltin) {
             getLogger().warning("In Paper 1.18.2 344+, this plugin is no longer required.");
-            getLogger().warning("Set settings.proxy-protocol to true in paper.yml and remove this plugin.");
+            getLogger().warning("Set " + configKey + " to true in " + configFile + " and remove this plugin.");
             Bukkit.getPluginManager().disablePlugin(this);
             return;
-        } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException ignored) {}
+        }
 
         String version = getServer().getClass().getPackage().getName().split("\\.")[3];
         getLogger().info("Detected server version " + version);
