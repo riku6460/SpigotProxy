@@ -42,7 +42,7 @@ public class SpigotProxy extends JavaPlugin {
         } catch (ReflectiveOperationException ignored) {}
 
         if (isBuiltin) {
-            getLogger().warning("In Paper 1.18.2 344+, this plugin is no longer required.");
+            getLogger().warning("Since Paper 1.18.2 #344, this plugin is no longer required.");
             getLogger().warning("Set " + configKey + " to true in " + configFile + " and remove this plugin.");
             Bukkit.getPluginManager().disablePlugin(this);
             return;
