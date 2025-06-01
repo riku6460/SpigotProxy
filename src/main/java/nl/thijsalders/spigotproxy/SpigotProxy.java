@@ -4,7 +4,6 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.socket.SocketChannel;
 import nl.thijsalders.spigotproxy.netty.NettyChannelInitializer;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -109,7 +108,7 @@ public class SpigotProxy extends JavaPlugin {
         for (ChannelFuture channelFuture : this.channelFutureList) {
             ChannelPipeline channelPipeline = channelFuture.channel().pipeline();
             ChannelHandler serverBootstrapAcceptor = channelPipeline.first();
-            ChannelInitializer<SocketChannel> oldChildHandler = ReflectionUtils.getPrivateField(serverBootstrapAcceptor.getClass(), serverBootstrapAcceptor, "childHandler");
+            ChannelInitializer<?> oldChildHandler = ReflectionUtils.getPrivateField(serverBootstrapAcceptor.getClass(), serverBootstrapAcceptor, "childHandler");
             ReflectionUtils.setPrivateField(serverBootstrapAcceptor.getClass(), serverBootstrapAcceptor, "childHandler", new NettyChannelInitializer(oldChildHandler));
         }
     }
@@ -122,9 +121,9 @@ public class SpigotProxy extends JavaPlugin {
         for (ChannelFuture channelFuture : this.channelFutureList) {
             ChannelPipeline channelPipeline = channelFuture.channel().pipeline();
             ChannelHandler serverBootstrapAcceptor = channelPipeline.first();
-            ChannelInitializer<SocketChannel> childHandler = ReflectionUtils.getPrivateField(serverBootstrapAcceptor.getClass(), serverBootstrapAcceptor, "childHandler");
+            ChannelInitializer<?> childHandler = ReflectionUtils.getPrivateField(serverBootstrapAcceptor.getClass(), serverBootstrapAcceptor, "childHandler");
             if (childHandler instanceof NettyChannelInitializer) {
-                ChannelInitializer<SocketChannel> oldChildHandler = ((NettyChannelInitializer) childHandler).getOldChildHandler();
+                ChannelInitializer<?> oldChildHandler = ((NettyChannelInitializer) childHandler).getOldChildHandler();
                 ReflectionUtils.setPrivateField(serverBootstrapAcceptor.getClass(), serverBootstrapAcceptor, "childHandler", oldChildHandler);
             }
         }
