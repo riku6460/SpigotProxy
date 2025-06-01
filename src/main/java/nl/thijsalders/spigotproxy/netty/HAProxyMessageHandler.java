@@ -66,6 +66,7 @@ final class HAProxyMessageHandler extends ChannelInboundHandlerAdapter {
             } catch (Throwable throwable) {
                 throw new Exception(throwable);
             }
+            ctx.pipeline().remove(this);
         } else {
             super.channelRead(ctx, msg);
         }
