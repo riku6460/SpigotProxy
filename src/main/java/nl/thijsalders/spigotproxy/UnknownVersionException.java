@@ -1,4 +1,4 @@
 package nl.thijsalders.spigotproxy;
 
-public class UnknownVersionException extends Exception {
+public class UnknownVersionException extends RuntimeException {
 }

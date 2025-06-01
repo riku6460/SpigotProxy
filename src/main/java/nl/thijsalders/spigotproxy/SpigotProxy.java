@@ -55,11 +55,11 @@ public class SpigotProxy extends JavaPlugin {
             getLogger().info("Injecting NettyHandler...");
             inject();
             getLogger().info("Injection successful!");
-        } catch (Exception e) {
-            if (e instanceof UnknownVersionException) {
+        } catch (Throwable throwable) {
+            if (throwable instanceof UnknownVersionException || throwable.getCause() instanceof UnknownVersionException) {
                 getLogger().severe("Unknown server version " + version + ", please see if there are any updates available");
             }
-            getLogger().log(Level.SEVERE, "Injection netty handler failed!", e);
+            getLogger().log(Level.SEVERE, "Injection netty handler failed!", throwable);
             Bukkit.getPluginManager().disablePlugin(this);
         }
     }
@@ -110,7 +110,7 @@ public class SpigotProxy extends JavaPlugin {
             ChannelPipeline channelPipeline = channelFuture.channel().pipeline();
             ChannelHandler serverBootstrapAcceptor = channelPipeline.first();
             ChannelInitializer<SocketChannel> oldChildHandler = ReflectionUtils.getPrivateField(serverBootstrapAcceptor.getClass(), serverBootstrapAcceptor, "childHandler");
-            ReflectionUtils.setPrivateField(serverBootstrapAcceptor.getClass(), serverBootstrapAcceptor, "childHandler", new NettyChannelInitializer(oldChildHandler, minecraftServer.getClass().getPackage(), getLogger()));
+            ReflectionUtils.setPrivateField(serverBootstrapAcceptor.getClass(), serverBootstrapAcceptor, "childHandler", new NettyChannelInitializer(oldChildHandler));
         }
     }
 
