@@ -9,6 +9,7 @@ import org.bukkit.Bukkit;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -40,7 +41,8 @@ final class HAProxyMessageHandler extends ChannelInboundHandlerAdapter {
                 throw new UnknownVersionException();
             }
 
-            SET_SOCKET_ADDRESS = MethodHandles.lookup().unreflectSetter(socketAddress);
+            SET_SOCKET_ADDRESS = MethodHandles.lookup().unreflectSetter(socketAddress)
+                    .asType(MethodType.methodType(void.class, Object.class, SocketAddress.class));
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
@@ -60,9 +62,9 @@ final class HAProxyMessageHandler extends ChannelInboundHandlerAdapter {
                     ? new InetSocketAddress(realaddress, realport)
                     : ctx.channel().remoteAddress();
 
-            ChannelHandler handler = ctx.pipeline().get("packet_handler");
+            Object networkManager = ctx.pipeline().get("packet_handler");
             try {
-                SET_SOCKET_ADDRESS.invoke(handler, socketaddr);
+                SET_SOCKET_ADDRESS.invokeExact(networkManager, socketaddr);
             } catch (Throwable throwable) {
                 throw new Exception(throwable);
             }
