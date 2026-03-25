@@ -24,9 +24,19 @@ final class HAProxyMessageHandler extends ChannelInboundHandlerAdapter {
 
             Class<?> networkManager;
             try {
-                networkManager = Class.forName("net.minecraft.network.NetworkManager");
+                networkManager = Class.forName("net.minecraft.network.Connection");
             } catch (ClassNotFoundException e) {
-                networkManager = Class.forName(minecraftServerClass.getPackage().getName() + ".NetworkManager");
+                try {
+                    networkManager = Class.forName("net.minecraft.network.NetworkManager");
+                } catch (ClassNotFoundException ex) {
+                    ex.addSuppressed(e);
+                    try {
+                        networkManager = Class.forName(minecraftServerClass.getPackage().getName() + ".NetworkManager");
+                    } catch (ClassNotFoundException exx) {
+                        exx.addSuppressed(ex);
+                        throw exx;
+                    }
+                }
             }
 
             Field socketAddress = null;

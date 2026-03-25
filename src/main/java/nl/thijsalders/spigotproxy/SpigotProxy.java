@@ -47,7 +47,13 @@ public class SpigotProxy extends JavaPlugin {
             return;
         }
 
-        String version = getServer().getClass().getPackage().getName().split("\\.")[3];
+        final String[] packageName = getServer().getClass().getPackage().getName().split("\\.");
+        final String version;
+        if (packageName.length < 4) {
+            version = "26.1 or later";
+        } else {
+            version = packageName[3];
+        }
         getLogger().info("Detected server version " + version);
 
         try {
@@ -56,7 +62,7 @@ public class SpigotProxy extends JavaPlugin {
             getLogger().info("Injection successful!");
         } catch (Throwable throwable) {
             if (throwable instanceof UnknownVersionException || throwable.getCause() instanceof UnknownVersionException) {
-                getLogger().severe("Unknown server version " + version + ", please see if there are any updates available");
+                getLogger().severe("Unknown server version, please see if there are any updates available");
             }
             getLogger().log(Level.SEVERE, "Injection netty handler failed!", throwable);
             Bukkit.getPluginManager().disablePlugin(this);
@@ -78,7 +84,8 @@ public class SpigotProxy extends JavaPlugin {
 
         Object serverConnection = null;
         for (Method method : minecraftServer.getClass().getSuperclass().getMethods()) {
-            if (method.getReturnType().getSimpleName().equals("ServerConnection")) {
+            final String returnType = method.getReturnType().getSimpleName();
+            if (returnType.equals("ServerConnection") || returnType.equals("ServerConnectionListener")) {
                 getLogger().fine("getServerConnection: " + method);
                 serverConnection = method.invoke(minecraftServer);
                 break;
